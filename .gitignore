@@ -7,6 +7,8 @@
 *.sln.
 *.vs
 *.vscode
+*.env
+*.config
 
 # Build results
 
