@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -9,14 +10,14 @@ namespace canvas_downloader
 {
     public static class Config
     {
-        public static string PromptBaseURL()
+        public static string PromptServerURL()
         {
             while (true)
             {
                 Console.Write("Please enter the base URL of the Canvas LMS server:: ");
-                string baseURL = Console.ReadLine();
+                string serverURL = Console.ReadLine();
                 Uri uriResult;
-                bool result = Uri.TryCreate(baseURL, UriKind.Absolute, out uriResult) 
+                bool result = Uri.TryCreate(serverURL, UriKind.Absolute, out uriResult) 
                     && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
                 
                 if (!result)
@@ -24,7 +25,7 @@ namespace canvas_downloader
                     Console.WriteLine("URL not valid, please try again");
                     continue;
                 }
-                return baseURL;
+                return serverURL;
             }
         }
 
@@ -40,48 +41,89 @@ namespace canvas_downloader
             return Console.ReadLine();
         }
 
-        public static Dictionary<string, object> GetConfig(string appRootPath, bool cacheless=false)
+        public static Dictionary<string, object> GetConfig(bool cacheless=false)
         {
-            return new Dictionary<string, object>();
+            
+            
+            string configFolder = OSHelper.CombinePaths(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"canvas-downloader");
 
             try
             {
-                Directory.CreateDirectory(Path.GetFullPath(Path.GetDirectoryName(appRootPath)));
+                Directory.CreateDirectory(Path.GetFullPath(configFolder));
             }
             catch (Exception) {}
-
-
-            Dictionary<string, object> values = new Dictionary<string, object>();
-            values.Add("AccessToken", "0000");
-            values.Add("ServerName", "DefaultServer");
-            values.Add("ServerURL", "https://canvas.instructure.com/");
-
-            // Product product = new Product();
-            // product.ExpiryDate = new DateTime(2008, 12, 28);
 
             JsonSerializer serializer = new JsonSerializer();
             serializer.Converters.Add(new JavaScriptDateTimeConverter());
             serializer.NullValueHandling = NullValueHandling.Ignore;
-
-            // using (StreamWriter sw = new StreamWriter(@"C:\\Users\\KyleP\\Desktop\\appsettings.json"))
-            using (StreamWriter sw = new StreamWriter(OSHelper.CombinePaths(Path.GetFullPath(Path.GetDirectoryName(appRootPath)), "appsettings.json")))
-            using (JsonWriter writer = new JsonTextWriter(sw))
+            
+            if (cacheless)
             {
-                serializer.Serialize(writer, values);
+                return WriteConfig(serializer, configFolder, false);
             }
 
-            using (StreamReader sr = new StreamReader(OSHelper.CombinePaths(Path.GetFullPath(Path.GetDirectoryName(appRootPath)), "appsettings.json")))
-            using (JsonReader reader = new JsonTextReader(sr))
+            try
             {
-                JObject output = (Newtonsoft.Json.Linq.JObject)serializer.Deserialize(reader);
-                
-                var newValues = output.ToObject<Dictionary<string, object>>();
-                Console.WriteLine(newValues["AccessToken"]);
-                Console.WriteLine(newValues["ServerName"]);
-                Console.WriteLine(newValues["ServerURL"]);
-                Console.WriteLine(OSHelper.CombinePaths(Path.GetFullPath(Path.GetDirectoryName(appRootPath)), "appsettings.json"));
+                var values = ReadConfig(serializer, configFolder);
+                if (ContainsKeys(values, new List<string> {"ServerName","ServerURL","AccessToken"}))
+                {
+                    return values;
+                }
+                else
+                {
+                    Console.WriteLine("Configuration corrupted or missing values");
+                    return WriteConfig(serializer, configFolder);
+                }
             }
-            // var newValues = JsonConvert.DeserializeObject<Dictionary<string, object>>(output);
+            catch (System.IO.FileNotFoundException)
+            {
+                return WriteConfig(serializer, configFolder);
+            }
+        }
+
+        public static bool ContainsKeys(Dictionary<string, object> dictionary,
+                             List<string> keys)
+        {
+            return keys.Any() 
+                && keys.All(key => dictionary.ContainsKey(key));
+        }
+
+        private static Dictionary<string, object> ReadConfig(JsonSerializer serializer, string configFolder)
+        {
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            using (StreamReader sr = new StreamReader(OSHelper.CombinePaths(Path.GetFullPath(configFolder), "appsettings.json")))
+                using (JsonReader reader = new JsonTextReader(sr))
+                {
+                    JObject output = (Newtonsoft.Json.Linq.JObject)serializer.Deserialize(reader);
+                    
+                    values = output.ToObject<Dictionary<string, object>>();
+                    Console.WriteLine("Read config from " + OSHelper.CombinePaths(Path.GetFullPath(configFolder), "appsettings.json"));
+                }
+                //Add a check to verify all data exists in Json file
+                return values;
+        }
+
+        private static Dictionary<string, object> WriteConfig(JsonSerializer serializer, string configFolder, bool writeToDisk=true)
+        {
+            Dictionary<string, object> values = new Dictionary<string, object>();
+            if (writeToDisk)
+                Console.WriteLine("Configuration not found");
+            else
+                Console.WriteLine("Configuration will not be saved");
+                values.Add("ServerName", PromptServerName());
+                values.Add("ServerURL", PromptServerURL());
+                values.Add("AccessToken", PromptAccessToken());
+
+            if (writeToDisk)
+            {
+                using (StreamWriter sw = new StreamWriter(OSHelper.CombinePaths(Path.GetFullPath(configFolder), "appsettings.json")))
+                using (JsonWriter writer = new JsonTextWriter(sw))
+                {
+                    serializer.Serialize(writer, values);
+                }
+            }
+            return values;
         }
 
     }

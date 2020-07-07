@@ -28,7 +28,7 @@ namespace canvas_downloader
                 { return; }
 
                 if (opts.NoCache) 
-                    { configs = Config.GetConfig(appRootPath, true); }
+                    { configs = Config.GetConfig(true); }
 
                 //check if the provided filepath if valid
                 if (opts.Output != null)
@@ -46,7 +46,7 @@ namespace canvas_downloader
                 }
             }
             if (configs == null)
-                { configs = Config.GetConfig(appRootPath); }
+                { configs = Config.GetConfig(); }
         }
 
         static void HandleParseError(IEnumerable<Error> errs)
