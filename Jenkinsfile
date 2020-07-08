@@ -13,7 +13,7 @@ pipeline {
     post {
         success {
           // we only worry about archiving the files if the build steps are successful
-          archiveArtifacts(artifacts: '**/publish/*', allowEmptyArchive: true)
+          archiveArtifacts(artifacts: 'bin/artifacts/', allowEmptyArchive: true)
         }
       }
 }

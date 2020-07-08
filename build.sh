@@ -38,5 +38,8 @@ declare -a RID=(
 
 for rt in "${RID[@]}"
 do
+    mkdir -p "$sdir/bin/artifacts/$rt"
     dotnet publish --configuration "$configuration" --runtime $rt -p:PublishSingleFile=true
+    rm "$sdir/bin/Release/netcoreapp3.1/$rt/publish/canvas-downloader.pdb"
+    mv "$sdir/bin/Release/netcoreapp3.1/$rt/publish/" "$sdir/bin/artifacts/$rt"
 done
