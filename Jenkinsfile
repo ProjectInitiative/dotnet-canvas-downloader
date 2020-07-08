@@ -3,11 +3,14 @@ pipeline {
     stages {
         stage('Build on Linux') {
             agent { 
-                label 'linux'
+                label 'Debian10-Node'
             }
             steps { 
-                bash '$ENV:WORKSPACE/build.sh'
+                sh '$ENV:WORKSPACE/build.sh'
             }
+        }
+        stage('Archive Artifacts') {
+
         }
     }
 }
