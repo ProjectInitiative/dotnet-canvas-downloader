@@ -6,7 +6,7 @@ pipeline {
                 label 'Debian10-Node'
             }
             steps { 
-                sh '${env.WORKSPACE}/build.sh'
+                sh "${env.WORKSPACE}/build.sh"
             }
         }
     }
