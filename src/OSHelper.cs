@@ -6,6 +6,10 @@ namespace canvas_downloader
 {
     public static class OSHelper
     {
+        public static string configFolder = OSHelper.CombinePaths(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"canvas-downloader");
+        
+        public static string appSettings = OSHelper.CombinePaths(Path.GetFullPath(configFolder), "appsettings.json");
         public static string CombinePaths(params string[] paths)
         {
             if (paths == null)

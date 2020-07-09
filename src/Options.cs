@@ -18,8 +18,11 @@ namespace canvas_downloader
 
         [Option('n', "nocache", Required = false, HelpText = "Run program without cached credentials.")]
         public bool NoCache { get; set; }
+
+        [Option('a', "addserver", Required = false, HelpText = "Add a server to the list of cached servers.")]
+        public bool AddServer { get; set; }
         
-        [Option('x', "DeleteCache", Required = false, HelpText = "Deletes all cached login information.")]
+        [Option('x', "deletecache", Required = false, HelpText = "Deletes all cached login information.")]
         public bool DeleteCache { get; set; }
         
     }

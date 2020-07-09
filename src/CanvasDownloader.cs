@@ -9,7 +9,7 @@ namespace canvas_downloader
     class CanvasDownloader
     {
         static Options opts { get; set; }
-        static Dictionary<string,object> configs = null;
+        static List<Dictionary<string,object>> configs = null;
         private static string appRootPath { get; } = Path.GetFullPath(
             Path.GetDirectoryName(System.Reflection.Assembly
                 .GetExecutingAssembly().Location));
@@ -27,8 +27,24 @@ namespace canvas_downloader
                 if (opts.NoFiles && opts.NoModules)
                 { return; }
 
+                if (opts.DeleteCache) 
+                    { 
+                        try 
+                        {
+                            File.Delete(OSHelper.appSettings);
+                            Console.WriteLine("Successfully deleted {0}", OSHelper.appSettings);
+                        } 
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Error deleting {0}", OSHelper.appSettings);
+                        }
+                        return;
+                    }
+
                 if (opts.NoCache) 
-                    { configs = Config.GetConfig(true); }
+                    { configs = Config.GetConfig(cacheless: true); }
+                else if (opts.AddServer) 
+                    { configs = Config.GetConfig(addServer: true); }
 
                 //check if the provided filepath if valid
                 if (opts.Output != null)

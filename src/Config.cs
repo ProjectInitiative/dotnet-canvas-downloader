@@ -41,44 +41,48 @@ namespace canvas_downloader
             return Console.ReadLine();
         }
 
-        public static Dictionary<string, object> GetConfig(bool cacheless=false)
+        // TODO: add in switch to handle adding multiple servers and cacheless (cacheless will take priority)
+        public static List<Dictionary<string, object>> GetConfig(bool cacheless=false, bool addServer=false)
         {
-            
-            
-            string configFolder = OSHelper.CombinePaths(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"canvas-downloader");
 
             try
             {
-                Directory.CreateDirectory(Path.GetFullPath(configFolder));
+                Directory.CreateDirectory(Path.GetFullPath(OSHelper.configFolder));
             }
             catch (Exception) {}
 
             JsonSerializer serializer = new JsonSerializer();
             serializer.Converters.Add(new JavaScriptDateTimeConverter());
+            serializer.Formatting = Formatting.Indented;
             serializer.NullValueHandling = NullValueHandling.Ignore;
             
             if (cacheless)
             {
-                return WriteConfig(serializer, configFolder, false);
+                return WriteConfig(serializer, writeToDisk: false);
             }
 
             try
             {
-                var values = ReadConfig(serializer, configFolder);
-                if (ContainsKeys(values, new List<string> {"ServerName","ServerURL","AccessToken"}))
+                var servers = ReadConfig(serializer);
+                // if (ContainsKeys(servers, new List<string> {"ServerName","ServerURL","AccessToken"}))
+                if (true)
                 {
-                    return values;
+                    if (addServer)
+                    {
+                        servers = WriteConfig(serializer, servers: servers, addServer: true);
+                    }
+                    return servers;
                 }
                 else
                 {
                     Console.WriteLine("Configuration corrupted or missing values");
-                    return WriteConfig(serializer, configFolder);
+                    return WriteConfig(serializer);
                 }
             }
             catch (System.IO.FileNotFoundException)
             {
-                return WriteConfig(serializer, configFolder);
+                Console.WriteLine("Configuration not found");
+                return WriteConfig(serializer);
             }
         }
 
@@ -89,41 +93,51 @@ namespace canvas_downloader
                 && keys.All(key => dictionary.ContainsKey(key));
         }
 
-        private static Dictionary<string, object> ReadConfig(JsonSerializer serializer, string configFolder)
+        private static List<Dictionary<string, object>> ReadConfig(JsonSerializer serializer)
         {
-            Dictionary<string, object> values = new Dictionary<string, object>();
-            using (StreamReader sr = new StreamReader(OSHelper.CombinePaths(Path.GetFullPath(configFolder), "appsettings.json")))
-                using (JsonReader reader = new JsonTextReader(sr))
-                {
-                    JObject output = (Newtonsoft.Json.Linq.JObject)serializer.Deserialize(reader);
-                    
-                    values = output.ToObject<Dictionary<string, object>>();
-                    Console.WriteLine("Read config from " + OSHelper.CombinePaths(Path.GetFullPath(configFolder), "appsettings.json"));
-                }
-                //Add a check to verify all data exists in Json file
-                return values;
+            List<Dictionary<string, object>> servers;
+            using (StreamReader sr = new StreamReader(OSHelper.appSettings))
+            using (JsonReader reader = new JsonTextReader(sr))
+            {
+                JArray output = (Newtonsoft.Json.Linq.JArray)serializer.Deserialize(reader);
+                servers = output.ToObject<List<Dictionary<string,object>>>();
+                Console.WriteLine("Read config from " + OSHelper.appSettings);
+            }
+            //Add a check to verify all data exists in Json file
+            return servers;
         }
 
-        private static Dictionary<string, object> WriteConfig(JsonSerializer serializer, string configFolder, bool writeToDisk=true)
+        private static List<Dictionary<string, object>> WriteConfig(JsonSerializer serializer,
+                                                                    List<Dictionary<string, object>> servers=null, bool writeToDisk=true, bool addServer=false)
         {
-            Dictionary<string, object> values = new Dictionary<string, object>();
-            if (writeToDisk)
-                Console.WriteLine("Configuration not found");
-            else
-                Console.WriteLine("Configuration will not be saved");
-                values.Add("ServerName", PromptServerName());
-                values.Add("ServerURL", PromptServerURL());
-                values.Add("AccessToken", PromptAccessToken());
+            if (servers == null)
+            {
+                servers = new List<Dictionary<string, object>>();
+            }
 
+            Dictionary<string, object> server = new Dictionary<string, object>();
+
+            server.Add("ServerName", PromptServerName());
+            server.Add("ServerURL", PromptServerURL());
+            server.Add("AccessToken", PromptAccessToken());
+            
+            // append server to list of servers in the config
+            servers.Add(server);
             if (writeToDisk)
             {
-                using (StreamWriter sw = new StreamWriter(OSHelper.CombinePaths(Path.GetFullPath(configFolder), "appsettings.json")))
+                if (addServer)
+                    Console.WriteLine("New Server added!");
+
+                using (StreamWriter sw = new StreamWriter(OSHelper.appSettings))
                 using (JsonWriter writer = new JsonTextWriter(sw))
                 {
-                    serializer.Serialize(writer, values);
+                    serializer.Serialize(writer, servers);
                 }
             }
-            return values;
+            else
+                Console.WriteLine("Configuration will not be saved");
+            
+            return servers;
         }
 
     }
