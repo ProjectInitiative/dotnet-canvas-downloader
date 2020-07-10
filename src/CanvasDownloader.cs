@@ -8,13 +8,11 @@ namespace canvas_downloader
 {
     class CanvasDownloader
     {
-        static Options opts { get; set; }
-        static List<Dictionary<string,object>> configs = null;
-        private static string appRootPath { get; } = Path.GetFullPath(
-            Path.GetDirectoryName(System.Reflection.Assembly
-                .GetExecutingAssembly().Location));
-        static string rootPath { get; set; } = OSHelper.CombinePaths(
-            Path.GetFullPath(Path.GetDirectoryName(appRootPath)), "courses");
+        private static Options opts;
+        private static List<Dictionary<string,object>> configs = null;
+        
+        private static string coursesPath = OSHelper.CombinePaths(
+            Path.GetFullPath(Path.GetDirectoryName(OSHelper.AppRootPath)), "courses");
         static void Main(string[] args)
         {
             //parse command line arguments
@@ -31,12 +29,12 @@ namespace canvas_downloader
                     { 
                         try 
                         {
-                            File.Delete(OSHelper.appSettings);
-                            Console.WriteLine("Successfully deleted {0}", OSHelper.appSettings);
+                            File.Delete(OSHelper.AppSettings);
+                            Console.WriteLine("Successfully deleted {0}", OSHelper.AppSettings);
                         } 
                         catch (Exception e)
                         {
-                            Console.WriteLine("Error deleting {0}", OSHelper.appSettings);
+                            Console.WriteLine("Error deleting {0}", OSHelper.AppSettings);
                         }
                         return;
                     }
@@ -51,8 +49,8 @@ namespace canvas_downloader
                 {
                     try
                     {
-                        rootPath = OSHelper.CombinePaths(Path.GetFullPath(opts.Output), "courses");
-                        Directory.CreateDirectory(rootPath);
+                        coursesPath = OSHelper.CombinePaths(Path.GetFullPath(opts.Output), "courses");
+                        Directory.CreateDirectory(coursesPath);
                     }
                     catch (Exception)
                     {

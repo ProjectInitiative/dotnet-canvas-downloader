@@ -1,10 +1,7 @@
 pipeline {
-    agent none
+    agent { node { label 'Debian10-Node' } }
     stages {
         stage('Build') {
-            agent { 
-                label 'Debian10-Node'
-            }
             steps { 
                 sh "${env.WORKSPACE}/build.sh"
             }
@@ -12,8 +9,12 @@ pipeline {
     }
     post {
         success {
-          // we only worry about archiving the files if the build steps are successful
-          archiveArtifacts(artifacts: 'bin/artifacts/', allowEmptyArchive: true)
-        }
-      }
+                 // we only worry about archiving the files if the build steps are successful
+                archiveArtifacts(artifacts: 'bin/artifacts/', allowEmptyArchive: true)
+            }
+        always {
+                cleanWs()
+            }
+         }
+
 }

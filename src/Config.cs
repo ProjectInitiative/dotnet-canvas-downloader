@@ -47,7 +47,7 @@ namespace canvas_downloader
 
             try
             {
-                Directory.CreateDirectory(Path.GetFullPath(OSHelper.configFolder));
+                Directory.CreateDirectory(Path.GetFullPath(OSHelper.ConfigFolder));
             }
             catch (Exception) {}
 
@@ -96,12 +96,12 @@ namespace canvas_downloader
         private static List<Dictionary<string, object>> ReadConfig(JsonSerializer serializer)
         {
             List<Dictionary<string, object>> servers;
-            using (StreamReader sr = new StreamReader(OSHelper.appSettings))
+            using (StreamReader sr = new StreamReader(OSHelper.AppSettings))
             using (JsonReader reader = new JsonTextReader(sr))
             {
                 JArray output = (Newtonsoft.Json.Linq.JArray)serializer.Deserialize(reader);
                 servers = output.ToObject<List<Dictionary<string,object>>>();
-                Console.WriteLine("Read config from " + OSHelper.appSettings);
+                Console.WriteLine("Read config from " + OSHelper.AppSettings);
             }
             //Add a check to verify all data exists in Json file
             return servers;
@@ -128,7 +128,7 @@ namespace canvas_downloader
                 if (addServer)
                     Console.WriteLine("New Server added!");
 
-                using (StreamWriter sw = new StreamWriter(OSHelper.appSettings))
+                using (StreamWriter sw = new StreamWriter(OSHelper.AppSettings))
                 using (JsonWriter writer = new JsonTextWriter(sw))
                 {
                     serializer.Serialize(writer, servers);
