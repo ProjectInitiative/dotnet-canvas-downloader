@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using CommandLine;
-// using Microsoft.Extensions.Configuration;
 
 namespace canvas_downloader
 {
@@ -21,9 +20,6 @@ namespace canvas_downloader
                 .WithNotParsed(HandleParseError);
             if (opts != null)
             {
-                
-                if (opts.NoFiles && opts.NoModules)
-                { return; }
 
                 if (opts.DeleteCache) 
                     { 
@@ -32,17 +28,12 @@ namespace canvas_downloader
                             File.Delete(OSHelper.AppSettings);
                             Console.WriteLine("Successfully deleted {0}", OSHelper.AppSettings);
                         } 
-                        catch (Exception e)
+                        catch (Exception)
                         {
                             Console.WriteLine("Error deleting {0}", OSHelper.AppSettings);
+                            Environment.Exit(1);
                         }
-                        return;
                     }
-
-                if (opts.NoCache) 
-                    { configs = Config.GetConfig(cacheless: true); }
-                else if (opts.AddServer) 
-                    { configs = Config.GetConfig(addServer: true); }
 
                 //check if the provided filepath if valid
                 if (opts.Output != null)
@@ -55,15 +46,33 @@ namespace canvas_downloader
                     catch (Exception)
                     {
                         Console.WriteLine("Invalid file path. Please enter a valid path.");
-                        return;
+                        Environment.Exit(1);
                     }
                 }
+
+
+                if (opts.NoCache) 
+                    { configs = Config.GetConfig(cacheless: true); }
+                
+                else if (opts.AddServer) 
+                    { configs = Config.GetConfig(addServer: true); }
+                
+                if (opts.NoFiles && opts.NoModules)
+                    { Environment.Exit(0); }
+                
+                // not sure how to handle this yet
+                // if ()
+                // {
+                //     Environment.Exit(0);
+                // }
             }
             if (configs == null)
                 { configs = Config.GetConfig(); }
         }
 
         static void HandleParseError(IEnumerable<Error> errs)
-        { }
+        { 
+            Environment.Exit(1);
+        }
     }
 }

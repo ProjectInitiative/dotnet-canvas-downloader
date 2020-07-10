@@ -6,6 +6,8 @@ namespace canvas_downloader
 {
     public static class OSHelper
     {
+
+        // directory that the exe is extracted to during execution
         private static string appRootPath = Path.GetFullPath(
             Path.GetDirectoryName(System.Reflection.Assembly
                 .GetExecutingAssembly().Location));
@@ -14,6 +16,8 @@ namespace canvas_downloader
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"canvas-downloader");
         
         private static string appSettings = OSHelper.CombinePaths(Path.GetFullPath(configFolder), "appsettings.json");
+
+        // OS way of combining multiple strings together to create a valid path
         public static string CombinePaths(params string[] paths)
         {
             if (paths == null)
@@ -23,6 +27,7 @@ namespace canvas_downloader
             return paths.Aggregate(Path.Combine);
         }
 
+        // replaces all invalid characters in a string to make the filename OS file system safe
         public  static void FormatFileName(string fileName)
         {
             foreach (char c in System.IO.Path.GetInvalidFileNameChars())
