@@ -11,13 +11,14 @@
     <Company>ProjectInitiative</Company>
     <Authors>Kyle Petryszak</Authors>
     <Product>Canvas Downloader</Product>
-    <Description />
+    <Description>Simple CLI app to download student files from Canvas LMS</Description>
     <Copyright>Copyright (C) 2020 Kyle Petryszak</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
     <PackageReference Include="Newtonsoft.json" Version="12.0.3" />
+    <PackageReference Include="RestSharp" Version="106.11.4" />
     <PackageReference Include="System.Configuration" Version="2.0.5" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.7.0" />
   </ItemGroup>

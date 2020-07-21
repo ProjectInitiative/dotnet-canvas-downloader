@@ -101,7 +101,7 @@ namespace canvas_downloader
             {
                 JArray output = (Newtonsoft.Json.Linq.JArray)serializer.Deserialize(reader);
                 servers = output.ToObject<List<Dictionary<string,object>>>();
-                Console.WriteLine("Read config from " + OSHelper.AppSettings);
+                Console.WriteLine("Using config from " + OSHelper.AppSettings);
             }
             //Add a check to verify all data exists in Json file
             return servers;

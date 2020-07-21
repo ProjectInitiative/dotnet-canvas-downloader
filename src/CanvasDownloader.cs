@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using CommandLine;
 
 namespace canvas_downloader
@@ -14,13 +17,23 @@ namespace canvas_downloader
             Path.GetFullPath(Path.GetDirectoryName(OSHelper.AppRootPath)), "courses");
         static void Main(string[] args)
         {
+            var spinner = new ConsoleSpinner();
+           
+            Task.Run(() => { 
+                    Console.Write("waiting for 10 seconds...");
+                    Thread.Sleep(10000); 
+                    spinner.IsTaskDone = true;
+                    Console.WriteLine("Finished Waiting.");
+                });
+            spinner.Wait();
+
+            return;
             //parse command line arguments
             CommandLine.Parser.Default.ParseArguments<Options>(args)
                 .WithParsed((Options o ) => { opts = o; })
                 .WithNotParsed(HandleParseError);
             if (opts != null)
             {
-
                 if (opts.DeleteCache) 
                     { 
                         try 
@@ -60,11 +73,6 @@ namespace canvas_downloader
                 if (opts.NoFiles && opts.NoModules)
                     { Environment.Exit(0); }
                 
-                // not sure how to handle this yet
-                // if ()
-                // {
-                //     Environment.Exit(0);
-                // }
             }
             if (configs == null)
                 { configs = Config.GetConfig(); }
