@@ -1,7 +1,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using RestSharp;
 
@@ -49,15 +52,14 @@ namespace canvas_downloader
 
         private Canvas(string baseURL)
         {
-            this.baseURL = baseURL;
-            this.baseUri = new Uri(this.baseURL);
+            BaseURL = baseURL;
+            this.baseUri = new Uri(BaseURL);
             this.client = new RestClient(this.baseUri);
         }
 
         public Canvas(string baseURL, string username, string password)
             :this(baseURL)
         {
-            
             this.username = username;
             this.password = password;
             byte[] data = System.Text.ASCIIEncoding.ASCII.GetBytes(this.username + ":" + this.password);
@@ -77,6 +79,20 @@ namespace canvas_downloader
             };
         }
 
+        public List<Dictionary<object, object>> GetCourses()
+        {
+            var spinner = new ConsoleSpinner();
+            List<Dictionary<object, object>> response = null;
+            // response = GetPaginated(new RestRequest("courses", Method.GET));
+            Task.Run(() => { 
+                    Console.Write("Pulling course data...");
+                    response = GetPaginated(new RestRequest("courses", Method.GET));
+                    spinner.IsTaskDone = true;
+                    Console.WriteLine("Request finished");
+                });
+            spinner.Wait();
+            return response;
+        }
 
         public List<Dictionary<object, object>> GetPaginated(IRestRequest request, int page = -1)
         {
@@ -116,7 +132,10 @@ namespace canvas_downloader
             {
                 foreach(KeyValuePair<string, string> entry in headers)
                 {
-                    request.AddHeader(entry.Key, entry.Value);
+                    // Only add header if it does not already exist
+                    // TODO: replace if exists
+                    if(!request.Parameters.Any(x => x.Name == entry.Key))
+                        request.AddHeader(entry.Key, entry.Value);
                 }
             }
         }

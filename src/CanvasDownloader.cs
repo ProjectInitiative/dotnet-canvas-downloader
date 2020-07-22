@@ -17,17 +17,6 @@ namespace canvas_downloader
             Path.GetFullPath(Path.GetDirectoryName(OSHelper.AppRootPath)), "courses");
         static void Main(string[] args)
         {
-            var spinner = new ConsoleSpinner();
-           
-            Task.Run(() => { 
-                    Console.Write("waiting for 10 seconds...");
-                    Thread.Sleep(10000); 
-                    spinner.IsTaskDone = true;
-                    Console.WriteLine("Finished Waiting.");
-                });
-            spinner.Wait();
-
-            return;
             //parse command line arguments
             CommandLine.Parser.Default.ParseArguments<Options>(args)
                 .WithParsed((Options o ) => { opts = o; })
@@ -76,6 +65,22 @@ namespace canvas_downloader
             }
             if (configs == null)
                 { configs = Config.GetConfig(); }
+
+
+            string baseURL = (string)configs[0]["ServerURL"];
+            string accessToken = (string)configs[0]["AccessToken"];
+
+
+            var canvas = new Canvas(baseURL, accessToken);
+            var response = canvas.GetCourses();
+            foreach (var item in response)
+            {
+                if (item.ContainsKey("name"))
+                {
+                    Console.WriteLine(item["name"]);
+                }
+            }
+            Console.WriteLine(response.Count);
         }
 
         static void HandleParseError(IEnumerable<Error> errs)
