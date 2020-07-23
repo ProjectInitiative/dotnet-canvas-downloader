@@ -78,7 +78,7 @@ namespace canvas_downloader
                 if (course.ContainsKey("name") && course.ContainsKey("id"))
                 {
                     Console.WriteLine("Course: " + course["name"]);
-                    course.Add("folders", canvas.GetCourseFolders(course["id"].ToString()));
+                    course.Add("folders", canvas.GetCourseFolders(course["name"].ToString(), course["id"].ToString()));
                     if (((List<Dictionary<object, object>>)course["folders"]).Count != 0  && !opts.NoFiles)
                     {
                         foreach (var folder in (List<Dictionary<object, object>>)course["folders"])

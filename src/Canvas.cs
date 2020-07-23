@@ -93,19 +93,21 @@ namespace canvas_downloader
             return response;
         }
 
-        public List<Dictionary<object, object>> GetCourseFolders(string courseID)
+        public List<Dictionary<object, object>> GetCourseFolders(string courseName, string courseID)
         {
             var spinner = new ConsoleSpinner();
             List<Dictionary<object, object>> folders = null;
             Task.Run(() => { 
-                    Console.Write("Pulling course folder structure...");
+                    Console.Write("Pulling " + courseName + " folder structure...");
                     string folderURL = "courses/" + courseID + "/folders/";
                     folders = GetPaginated(new RestRequest(folderURL, Method.GET));
-                    spinner.IsTaskDone = true;
+                    ConsoleSpinner.ClearCurrentConsoleLine();
+                    Console.Write("Pulling " + courseName + " file structure...");
                     foreach(var folder in folders)
                     {
                         folder.Add("files", GetPaginated(new RestRequest(folderURL + folder["id"] + "files/", Method.GET)));
                     }
+                    spinner.IsTaskDone = true;
                 });
             spinner.Wait();
             ConsoleSpinner.ClearCurrentConsoleLine();
