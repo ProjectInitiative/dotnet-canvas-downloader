@@ -83,15 +83,33 @@ namespace canvas_downloader
         {
             var spinner = new ConsoleSpinner();
             List<Dictionary<object, object>> response = null;
-            // response = GetPaginated(new RestRequest("courses", Method.GET));
             Task.Run(() => { 
                     Console.Write("Pulling course data...");
                     response = GetPaginated(new RestRequest("courses", Method.GET));
                     spinner.IsTaskDone = true;
-                    Console.WriteLine("Request finished");
                 });
             spinner.Wait();
+            ConsoleSpinner.ClearCurrentConsoleLine();
             return response;
+        }
+
+        public List<Dictionary<object, object>> GetCourseFolders(string courseID)
+        {
+            var spinner = new ConsoleSpinner();
+            List<Dictionary<object, object>> folders = null;
+            Task.Run(() => { 
+                    Console.Write("Pulling course folder structure...");
+                    string folderURL = "courses/" + courseID + "/folders/";
+                    folders = GetPaginated(new RestRequest(folderURL, Method.GET));
+                    spinner.IsTaskDone = true;
+                    foreach(var folder in folders)
+                    {
+                        folder.Add("files", GetPaginated(new RestRequest(folderURL + folder["id"] + "files/", Method.GET)));
+                    }
+                });
+            spinner.Wait();
+            ConsoleSpinner.ClearCurrentConsoleLine();
+            return folders;
         }
 
         public List<Dictionary<object, object>> GetPaginated(IRestRequest request, int page = -1)
@@ -139,6 +157,8 @@ namespace canvas_downloader
                 }
             }
         }
+
+        
 
         public string AccessToken { get => accessToken; set { accessToken = value; } }
         public string Username { get => username; set { username = value; } }

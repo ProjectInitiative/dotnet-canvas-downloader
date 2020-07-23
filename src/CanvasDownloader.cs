@@ -72,15 +72,26 @@ namespace canvas_downloader
 
 
             var canvas = new Canvas(baseURL, accessToken);
-            var response = canvas.GetCourses();
-            foreach (var item in response)
+            var courses = canvas.GetCourses();
+            foreach (var course in courses)
             {
-                if (item.ContainsKey("name"))
+                if (course.ContainsKey("name") && course.ContainsKey("id"))
                 {
-                    Console.WriteLine(item["name"]);
+                    Console.WriteLine("Course: " + course["name"]);
+                    course.Add("folders", canvas.GetCourseFolders(course["id"].ToString()));
+                    if (((List<Dictionary<object, object>>)course["folders"]).Count != 0  && !opts.NoFiles)
+                    {
+                        foreach (var folder in (List<Dictionary<object, object>>)course["folders"])
+                        {
+                            if (folder.ContainsKey("name"))
+                            {
+                                Console.WriteLine("\tFolder: " + folder["name"]);
+                            }
+                        }
+                    }
                 }
             }
-            Console.WriteLine(response.Count);
+            Console.WriteLine(courses.Count);
         }
 
         static void HandleParseError(IEnumerable<Error> errs)

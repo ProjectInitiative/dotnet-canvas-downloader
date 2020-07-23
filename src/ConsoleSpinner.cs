@@ -30,4 +30,12 @@ public class ConsoleSpinner
         Console.CursorVisible = true;
     }
     public bool IsTaskDone { get => isTaskDone; set { isTaskDone = value; } }
+
+    public static void ClearCurrentConsoleLine()
+    {
+        int currentLineCursor = Console.CursorTop;
+        Console.SetCursorPosition(0, Console.CursorTop);
+        Console.Write(new string(' ', Console.WindowWidth)); 
+        Console.SetCursorPosition(0, currentLineCursor);
+    }
 }
