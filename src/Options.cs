@@ -10,7 +10,7 @@ namespace canvas_downloader
         [Option('o', "output", Required = false, HelpText = "Specify output directory.")]
         public string Output { get; set; }
         
-[       Option('m', "nomodules", Required = false, HelpText = "Run program without downloading modules.")]
+        [Option('m', "nomodules", Required = false, HelpText = "Run program without downloading modules.")]
         public bool NoModules { get; set; }
         
         [Option('f', "nofiles", Required = false, HelpText = "Run program without downloading files.")]

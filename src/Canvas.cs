@@ -1,6 +1,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -105,7 +106,7 @@ namespace canvas_downloader
                     Console.Write("Pulling " + courseName + " file structure...");
                     foreach(var folder in folders)
                     {
-                        folder.Add("files", GetPaginated(new RestRequest(folderURL + folder["id"] + "files/", Method.GET)));
+                        folder.Add("files", GetPaginated(new RestRequest("folders/" + folder["id"].ToString() + "/files/", Method.GET)));
                     }
                     spinner.IsTaskDone = true;
                 });
@@ -144,6 +145,46 @@ namespace canvas_downloader
             {
                 return new List<Dictionary<object, object>>();
             }
+        }
+
+        public bool DownloadFile(string url, string path, string fileName)
+        {
+            bool success = false;
+            var spinner = new ConsoleSpinner();
+            Task.Run(() => { 
+                    Console.Write("Downloading " + fileName + "...");
+                    fileName = OSHelper.SanitizeFileName(fileName);
+                    OSHelper.MakeFolder(path);
+                    try
+                    {
+                        // var tempFile = Path.GetTempFileName();
+                        // using var writer = File.OpenWrite(tempFile);
+                        using var writer = File.OpenWrite(OSHelper.CombinePaths(path, fileName));
+
+                        var request = new RestRequest(url);
+                        request.ResponseWriter = responseStream =>
+                        {
+                            using (responseStream)
+                            {
+                                responseStream.CopyTo(writer);
+                            }
+                        };
+                        var response = client.DownloadData(request);
+
+                        success = true;
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("Download failed exception {0}", e.ToString());
+                        success = false;
+                    }
+
+                    spinner.IsTaskDone = true;
+                });
+            spinner.Wait();
+            ConsoleSpinner.ClearCurrentConsoleLine();
+            return success;
+
         }
 
         private void AddHeaders(IRestRequest request)

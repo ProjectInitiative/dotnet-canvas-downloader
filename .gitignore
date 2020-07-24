@@ -10,6 +10,7 @@
 *.env
 *.config
 *.json
+*courses/
 
 # Build results
 

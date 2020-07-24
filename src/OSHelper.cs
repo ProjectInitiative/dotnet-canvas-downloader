@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -27,13 +28,44 @@ namespace canvas_downloader
             return paths.Aggregate(Path.Combine);
         }
 
-        // replaces all invalid characters in a string to make the filename OS file system safe
-        public  static void FormatFileName(string fileName)
+        // // replaces all invalid characters in a string to make the filename OS file system safe
+        // public  static void FormatFileName(string fileName)
+        // {
+        //     foreach (char c in System.IO.Path.GetInvalidFileNameChars())
+        //     {
+        //         fileName = fileName.Replace(c, '_');
+        //     }
+        // }
+
+        public static void MakeFolder(string path)
         {
-            foreach (char c in System.IO.Path.GetInvalidFileNameChars())
+            try
             {
-                fileName = fileName.Replace(c, '_');
+                // Determine whether the directory exists.
+                if (Directory.Exists(path))
+                { return; }
+                // Try to create the directory.
+                DirectoryInfo di = Directory.CreateDirectory(path);
+                // Console.WriteLine("The directory was created successfully at {0}.", Directory.GetCreationTime(path));
             }
+            catch (Exception e)
+            {
+                Console.WriteLine("The process failed: {0}", e.ToString());
+            }
+        }
+
+        public static string SanitizeFileName(string fileName, char replacementChar = '_')
+        {
+            var blackList = new HashSet<char>(System.IO.Path.GetInvalidFileNameChars());
+            var output = fileName.ToCharArray();
+            for (int i = 0, ln = output.Length; i < ln; i++)
+            {
+                if (blackList.Contains(output[i]))
+                {
+                    output[i] = replacementChar;
+                }
+            }
+            return new String(output);
         }
 
         public static string ConfigFolder { get => configFolder; }

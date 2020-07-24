@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using CommandLine;
 
 namespace canvas_downloader
@@ -12,6 +9,8 @@ namespace canvas_downloader
     {
         private static Options opts;
         private static List<Dictionary<string,object>> configs = null;
+
+        private static Canvas canvas;
         
         private static string coursesPath = OSHelper.CombinePaths(
             Path.GetFullPath(Path.GetDirectoryName(OSHelper.AppRootPath)), "courses");
@@ -43,7 +42,7 @@ namespace canvas_downloader
                     try
                     {
                         coursesPath = OSHelper.CombinePaths(Path.GetFullPath(opts.Output), "courses");
-                        Directory.CreateDirectory(coursesPath);
+                        OSHelper.MakeFolder(coursesPath);
                     }
                     catch (Exception)
                     {
@@ -71,14 +70,18 @@ namespace canvas_downloader
             string accessToken = (string)configs[0]["AccessToken"];
 
 
-            var canvas = new Canvas(baseURL, accessToken);
+            canvas = new Canvas(baseURL, accessToken);
             var courses = canvas.GetCourses();
             foreach (var course in courses)
             {
                 if (course.ContainsKey("name") && course.ContainsKey("id"))
                 {
-                    Console.WriteLine("Course: " + course["name"]);
-                    course.Add("folders", canvas.GetCourseFolders(course["name"].ToString(), course["id"].ToString()));
+                    Console.WriteLine("Course: " + CourseName(course));
+                    
+                    // Get folder structure in each course
+                    course.Add("folders", canvas.GetCourseFolders(CourseName(course), course["id"].ToString()));
+                    
+                    // Create file folder structure
                     if (((List<Dictionary<object, object>>)course["folders"]).Count != 0  && !opts.NoFiles)
                     {
                         foreach (var folder in (List<Dictionary<object, object>>)course["folders"])
@@ -86,17 +89,54 @@ namespace canvas_downloader
                             if (folder.ContainsKey("name"))
                             {
                                 Console.WriteLine("\tFolder: " + folder["name"]);
+                                string folderPath = OSHelper.CombinePaths(coursesPath, OSHelper.SanitizeFileName(CourseName(course)), "files");
+                                
+                                foreach (var item in (List<Dictionary<object, object>>)folder["files"])
+                                {
+                                    var fileName = OSHelper.SanitizeFileName((string)item["display_name"]);
+                                    if (File.Exists(OSHelper.CombinePaths(folderPath, fileName)))
+                                    {
+                                        if (opts.Verbose)
+                                        {
+                                            Console.WriteLine("\t\tFile: skipping {0} already exists", fileName);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (opts.Verbose)
+                                        {
+                                            Console.WriteLine("\t\tFile: {0}", fileName);
+                                        }
+                                        canvas.DownloadFile((string)item["url"], folderPath, fileName);
+                                    }
+                                }
+                                
                             }
                         }
                     }
                 }
             }
-            Console.WriteLine(courses.Count);
         }
 
         static void HandleParseError(IEnumerable<Error> errs)
         { 
             Environment.Exit(1);
         }
+
+        static string CourseName(Dictionary<object, object> course)
+        {
+            object value;
+            if (course.TryGetValue("original_name", out value))
+            {
+                return (string)value;
+            }
+            else if (course.TryGetValue("name", out value))
+            {
+                return (string)value;
+            }
+            return "";
+        }
+
+
     }
 }
