@@ -12,8 +12,10 @@ namespace canvas_downloader
 
         private static Canvas canvas;
         
+        // private static string coursesPath = OSHelper.CombinePaths(
+            // Path.GetFullPath(Path.GetDirectoryName(OSHelper.AppRootPath)), "courses");
         private static string coursesPath = OSHelper.CombinePaths(
-            Path.GetFullPath(Path.GetDirectoryName(OSHelper.AppRootPath)), "courses");
+            Path.GetFullPath(Directory.GetCurrentDirectory()), "courses");
         static void Main(string[] args)
         {
             //parse command line arguments
