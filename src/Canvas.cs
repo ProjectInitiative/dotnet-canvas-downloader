@@ -155,11 +155,12 @@ namespace canvas_downloader
                     Console.Write("Downloading " + fileName + "...");
                     fileName = OSHelper.SanitizeFileName(fileName);
                     OSHelper.MakeFolder(path);
+                    var tempFile = OSHelper.CombinePaths(path, Path.GetRandomFileName() + ".tmp");
                     try
                     {
                         // var tempFile = Path.GetTempFileName();
                         // using var writer = File.OpenWrite(tempFile);
-                        using var writer = File.OpenWrite(OSHelper.CombinePaths(path, fileName));
+                        using var writer = File.OpenWrite(tempFile);
 
                         var request = new RestRequest(url);
                         request.ResponseWriter = responseStream =>
@@ -170,7 +171,7 @@ namespace canvas_downloader
                             }
                         };
                         var response = client.DownloadData(request);
-
+                        
                         success = true;
                     }
                     catch (Exception e)
@@ -179,6 +180,7 @@ namespace canvas_downloader
                         success = false;
                     }
 
+                    File.Move(tempFile, OSHelper.CombinePaths(path, fileName));
                     spinner.IsTaskDone = true;
                 });
             spinner.Wait();

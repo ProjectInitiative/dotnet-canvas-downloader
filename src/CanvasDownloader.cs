@@ -12,8 +12,6 @@ namespace canvas_downloader
 
         private static Canvas canvas;
         
-        // private static string coursesPath = OSHelper.CombinePaths(
-            // Path.GetFullPath(Path.GetDirectoryName(OSHelper.AppRootPath)), "courses");
         private static string coursesPath = OSHelper.CombinePaths(
             Path.GetFullPath(Directory.GetCurrentDirectory()), "courses");
         static void Main(string[] args)
@@ -96,7 +94,7 @@ namespace canvas_downloader
                                 foreach (var item in (List<Dictionary<object, object>>)folder["files"])
                                 {
                                     var fileName = OSHelper.SanitizeFileName((string)item["display_name"]);
-                                    if (File.Exists(OSHelper.CombinePaths(folderPath, fileName)))
+                                    if (!opts.Force && File.Exists(OSHelper.CombinePaths(folderPath, fileName)))
                                     {
                                         if (opts.Verbose)
                                         {
