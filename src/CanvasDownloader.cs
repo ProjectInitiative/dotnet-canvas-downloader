@@ -89,7 +89,9 @@ namespace canvas_downloader
                             if (folder.ContainsKey("name"))
                             {
                                 Console.WriteLine("\tFolder: " + folder["name"]);
-                                string folderPath = OSHelper.CombinePaths(coursesPath, OSHelper.SanitizeFileName(CourseName(course)), "files");
+                                string folderPath = OSHelper.CombinePaths(coursesPath, 
+                                    OSHelper.SanitizeFileName(CourseName(course)), 
+                                    "files", OSHelper.SanitizeFileName(folder["name"].ToString()));
                                 
                                 foreach (var item in (List<Dictionary<object, object>>)folder["files"])
                                 {
