@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+sdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+cd $sdir
+
+configuration="Release"
+
 declare -a RID=(
     "win-x64"
     "win-x86"
@@ -33,5 +38,8 @@ declare -a RID=(
 
 for rt in "${RID[@]}"
 do
-    dotnet publish --configuration Release --runtime $rt -p:PublishSingleFile=true
+    mkdir -p "$sdir/bin/artifacts/$rt"
+    dotnet publish --configuration "$configuration" --runtime $rt -p:PublishSingleFile=true
+    rm "$sdir/bin/Release/netcoreapp3.1/$rt/publish/canvas-downloader.pdb"
+    mv "$sdir/bin/Release/netcoreapp3.1/$rt/publish/" "$sdir/bin/artifacts/$rt"
 done

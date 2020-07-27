@@ -30,6 +30,12 @@ $RID = @(
     "osx.10.13-x64",
     "osx.10.14-x64")
 
+    Remove-Item -Recurse -Force "$PSScriptRoot\\bin"
+
 For ($i=0; $i -lt $RID.Length; $i++) {
-    dotnet publish --configuration Release --runtime $RID[$i] -p:PublishSingleFile=true
+    New-Item -ItemType Directory -Force -Path "$PSScriptRoot\\bin\\artifacts\\$($RID[$i])"
+    dotnet publish --configuration Release --runtime $RID[$i] -p:PublishSingleFile=true -p:TrimUnusedDependencies=true
+    Remove-Item "$PSScriptRoot\\bin\\Release\\netcoreapp3.1\\$($RID[$i])\\publish\\canvas-downloader.pdb"
+    Move-Item "$PSScriptRoot\\bin\\Release\\netcoreapp3.1\\$($RID[$i])\\publish\\*" "$PSScriptRoot\\bin\\artifacts\\$($RID[$i])"
+    Compress-Archive -Path "$PSScriptRoot\\bin\\artifacts\\$($RID[$i])" -DestinationPath "$PSScriptRoot\\bin\\artifacts\\$($RID[$i]).zip"
 }

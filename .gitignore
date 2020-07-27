@@ -7,6 +7,10 @@
 *.sln.
 *.vs
 *.vscode
+*.env
+*.config
+*.json
+*courses/
 
 # Build results
 
