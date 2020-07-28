@@ -114,6 +114,29 @@ namespace canvas_downloader
             ConsoleSpinner.ClearCurrentConsoleLine();
             return folders;
         }
+        
+        public List<Dictionary<object, object>> GetCourseModules(string courseName, string courseID)
+        {
+            var spinner = new ConsoleSpinner();
+            List<Dictionary<object, object>> modules = null;
+            Task.Run(() => { 
+                    Console.Write("Pulling " + courseName + " module structure...");
+                    string modulesURL = "courses/" + courseID + "/modules/";
+                    modules = GetPaginated(new RestRequest(modulesURL, Method.GET));
+                    ConsoleSpinner.ClearCurrentConsoleLine();
+                    Console.Write("Pulling " + courseName + " module item structure...");
+                    foreach(var module in modules)
+                    {
+                        module.Add("items", GetPaginated(new RestRequest(modulesURL + module["id"].ToString() + "/items/", Method.GET)));
+                    }
+                    spinner.IsTaskDone = true;
+                });
+            spinner.Wait();
+            ConsoleSpinner.ClearCurrentConsoleLine();
+            return modules;
+        }
+
+
 
         public List<Dictionary<object, object>> GetPaginated(IRestRequest request, int page = -1)
         {
@@ -151,15 +174,14 @@ namespace canvas_downloader
         {
             bool success = false;
             var spinner = new ConsoleSpinner();
-            Task.Run(() => { 
+            Task.Run(() => 
+            { 
                     Console.Write("Downloading " + fileName + "...");
                     fileName = OSHelper.SanitizeFileName(fileName);
                     OSHelper.MakeFolder(path);
                     var tempFile = OSHelper.CombinePaths(path, Path.GetRandomFileName() + ".tmp");
                     try
                     {
-                        // var tempFile = Path.GetTempFileName();
-                        // using var writer = File.OpenWrite(tempFile);
                         using var writer = File.OpenWrite(tempFile);
 
                         var request = new RestRequest(url);
@@ -186,7 +208,32 @@ namespace canvas_downloader
             spinner.Wait();
             ConsoleSpinner.ClearCurrentConsoleLine();
             return success;
+        }
 
+        public bool WriteBodyToHTML(string body, string path, string fileName)
+        {
+            bool success = false;
+            var spinner = new ConsoleSpinner();
+            Task.Run(() =>
+            {
+                Console.Write("Downloading " + fileName + "...");
+                fileName = OSHelper.SanitizeFileName(fileName);
+                OSHelper.MakeFolder(path);
+                try
+                {
+                    File.WriteAllText(OSHelper.CombinePaths(path, fileName), body);
+                    success = true;
+                }
+                catch (Exception e)
+                {
+                    success = false;
+                    Console.WriteLine("Error writing {0} to disk {1}", fileName, e.ToString());
+                }
+                spinner.IsTaskDone = true;
+            });
+            spinner.Wait();
+            ConsoleSpinner.ClearCurrentConsoleLine();
+            return success;
         }
 
         private void AddHeaders(IRestRequest request)

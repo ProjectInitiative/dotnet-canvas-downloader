@@ -28,15 +28,6 @@ namespace canvas_downloader
             return paths.Aggregate(Path.Combine);
         }
 
-        // // replaces all invalid characters in a string to make the filename OS file system safe
-        // public  static void FormatFileName(string fileName)
-        // {
-        //     foreach (char c in System.IO.Path.GetInvalidFileNameChars())
-        //     {
-        //         fileName = fileName.Replace(c, '_');
-        //     }
-        // }
-
         public static void MakeFolder(string path)
         {
             try
@@ -46,7 +37,6 @@ namespace canvas_downloader
                 { return; }
                 // Try to create the directory.
                 DirectoryInfo di = Directory.CreateDirectory(path);
-                // Console.WriteLine("The directory was created successfully at {0}.", Directory.GetCreationTime(path));
             }
             catch (Exception e)
             {

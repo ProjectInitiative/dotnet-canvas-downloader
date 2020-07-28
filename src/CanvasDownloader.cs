@@ -78,9 +78,10 @@ namespace canvas_downloader
                 {
                     Console.WriteLine("Course: " + CourseName(course));
                     
+                    
+                    
                     // Get folder structure in each course
                     course.Add("folders", canvas.GetCourseFolders(CourseName(course), course["id"].ToString()));
-                    
                     // Create file folder structure
                     if (((List<Dictionary<object, object>>)course["folders"]).Count != 0  && !opts.NoFiles)
                     {
@@ -112,6 +113,51 @@ namespace canvas_downloader
                                         canvas.DownloadFile((string)item["url"], folderPath, fileName);
                                     }
                                 }
+
+                    // Get module structure in each course
+                    course.Add("modules", canvas.GetCourseModules(CourseName(course), course["id"].ToString()));
+                    // Create module structure
+                    if (((List<Dictionary<object, object>>)course["modules"]).Count != 0  && !opts.NoModules)
+                    {
+                        foreach (var module in (List<Dictionary<object, object>>)course["modules"])
+                        {
+                            if (module.ContainsKey("name"))
+                            {
+                                Console.WriteLine("\tModule: " + module["name"]);
+                                    string modulePath = OSHelper.CombinePaths(coursesPath, 
+                                        OSHelper.SanitizeFileName(CourseName(course)), 
+                                        "modules", OSHelper.SanitizeFileName(module["name"].ToString()));
+
+                                foreach (var item in (List<Dictionary<object, object>>)module["items"]) 
+                                {
+                                    var fileName = OSHelper.SanitizeFileName((string)item["name"]);
+                                    
+
+                                    //TODO: modules are more complicated. They can have multiple items which can be 
+                                    // pages or assignments, and each returns an HTML page that contains the file links additional files.
+
+
+                                    if (!opts.Force && File.Exists(OSHelper.CombinePaths(modulePath, fileName)))
+                                    {
+                                        if (opts.Verbose)
+                                        {
+                                            Console.WriteLine("\t\tFile: skipping {0} already exists", fileName);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (opts.Verbose)
+                                        {
+                                            Console.WriteLine("\t\tFile: {0}", fileName);
+                                        }
+                                        canvas.DownloadFile((string)item["url"], modulePath, fileName);
+                                    }
+
+                                }
+                                    
+                            }
+                        }
+                    }
                                 
                             }
                         }
