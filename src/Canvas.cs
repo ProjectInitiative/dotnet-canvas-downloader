@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using RestSharp;
@@ -128,6 +127,10 @@ namespace canvas_downloader
                     foreach(var module in modules)
                     {
                         module.Add("items", GetPaginated(new RestRequest(modulesURL + module["id"].ToString() + "/items/", Method.GET)));
+                        foreach(var item in (List<Dictionary<object, object>>)module["items"])
+                        {
+                            item.Add("modulePage", GetPaginated(new RestRequest(item["url"].ToString(), Method.GET)));
+                        }
                     }
                     spinner.IsTaskDone = true;
                 });
@@ -138,11 +141,10 @@ namespace canvas_downloader
 
 
 
-        public List<Dictionary<object, object>> GetPaginated(IRestRequest request, int page = -1)
+        public List<Dictionary<object, object>> GetPaginated(IRestRequest request, int page = -1, string content = null)
         {
             IRestResponse response;
             AddHeaders(request);
-
             if (page == -1)
             {
                 response = client.Get(request);
@@ -156,12 +158,30 @@ namespace canvas_downloader
 
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                var data = JsonConvert.DeserializeObject<List<Dictionary<object, object>>>(response.Content);
+                
+                if (content != null && ((response.Content.Length >= 10 && content.Length >= 10 
+                        && response.Content.Substring(0, 10) == content.Substring(0, 10))
+                        || String.Equals(response.Content, content)))
+                {
+                    return new List<Dictionary<object, object>>();
+                }
+
+                List<Dictionary<object, object>> data;
+                if (response.Content.StartsWith("{"))
+                {
+                    data = new List<Dictionary<object, object>> 
+                        { JsonConvert.DeserializeObject<Dictionary<object, object>>(response.Content) };
+                }
+                else
+                {
+                    data = JsonConvert.DeserializeObject<List<Dictionary<object, object>>>(response.Content);
+                }
+
                 if (data.Count == 0)
                 { 
                     return new List<Dictionary<object, object>>(); 
                 }
-                data.AddRange((GetPaginated(request, page=page+1)));
+                data.AddRange((GetPaginated(request, page=page+1, response.Content)));
                 return data;
             }
             else
